@@ -50,8 +50,20 @@ contract Stake {
      stakers.push(msg.sender);
     }
 
-    function withdrawWOinterest() public payable waitTimer {
+    function withdraw() public waitTimer {
+      if(address(this).balance >= threshold){
+        _stakeState = StakeState.WINTEREST;
+      withdrawWInterest();
+      }else{
         _stakeState = StakeState.WOINTEREST;
+        withdrawWOinterest();
+      }
+    }
+
+    function withdrawWOinterest() internal {
+        if(_stakeState != StakeState.WOINTEREST){
+          revert();
+        }
         uint256 amount = balances[msg.sender];
         balances[msg.sender] = 0;
       (bool callSuccess, ) = address(this).call{value: amount}("");
@@ -59,6 +71,18 @@ contract Stake {
         revert Stake__transferFailed();
       } 
      } 
+
+     function withdrawWInterest() internal {
+       if(_stakeState != StakeState.WINTEREST){
+        revert();
+       }
+       calculateInterest();
+
+     }
+     function calculateInterest() internal pure {
+     
+     }
+
 
      function amountDeposited () public view returns (uint256) {
          return  address(this).balance;
