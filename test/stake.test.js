@@ -1,4 +1,4 @@
-const { assert, expect } = require("chai")
+const { assert } = require("chai")
 const { network, deployments, ethers } = require("hardhat")
 const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 
@@ -8,36 +8,85 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           let stakeContract, deployer, tester, deadline, thresholdc, stakeFactory
           const chainId = network.config.chainId
 
-          const amount = networkConfig[chainId]["interestAmount"]
+          const _amount = networkConfig[chainId]["interestAmount"]
+          const amount = ethers.utils.parseEther(_amount)
+          const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
+
               deployer = accounts[0]
               tester = accounts[1]
 
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
+              await stakeFactory.connect(deployer.address)
 
               await stakeFactory.createStake({ value: amount })
               const stakeaddress = await stakeFactory.stakeAddrresses(0)
               stakeContract = await ethers.getContractAt("Stake", stakeaddress, deployer)
               thresholdc = await stakeContract.getThreshold()
-              deadline = await stakeContract.deadline()
+              deadline = await stakeContract.getDeadline()
           })
 
           describe("constructor", () => {
               it("should check if interest was sent ", async () => {
                   const balance = await ethers.provider.getBalance(stakeContract.address)
-                  assert.equal(balance, amount)
+                  assert.equal(balance.toString(), amount.toString())
               })
-              it("should check if stakeState is open", async() => {
-                const stakeState = (await stakeContract._stakeState()).toString()
-                assert.equal(stakeState, "1")
+              it("should check if stakeState is open", async () => {
+                  const stakeState = (await stakeContract._stakeState()).toString()
+                  assert.equal(stakeState, "1")
               })
           })
-          describe('', () => {
-            
-          });
-          
-
+          describe("deposit function", () => {
+              beforeEach(async () => {
+                  await stakeContract.deposit({ value: depamount })
+              })
+              it("should check if a deposit was made", async () => {
+                  const total = parseInt(amount) + parseInt(depamount)
+                  const balance = await ethers.provider.getBalance(stakeContract.address)
+                  assert.equal(balance.toString(), total.toString())
+              })
+              it("should check if the mapping was updated", async () => {
+                  const mapBalance = await stakeContract.balances(deployer.address)
+                  assert.equal(mapBalance.toString(), depamount.toString())
+              })
+              it("should check that our array was updated", async () => {
+                  const arrayLength = await stakeContract.getStakelength()
+                  assert.equal(arrayLength.toString(), "1")
+              })
+              it('should check if staker is correct', async () => {
+                const addressC = await stakeContract.getStaker(0)
+                assert.equal(addressC, deployer.address)
+              });
+              
+          })
+          describe("interest, threshold, deadline", () => {
+              it("should check how much interest was sent", async () => {
+                  const interest = await stakeContract.getInterest()
+                  assert.equal(interest.toString(), amount)
+              })
+              it("should check if threshold was set", async () => {
+                  const _threshold = ethers.utils.parseEther(networkConfig[chainId]["threshold"])
+                  assert.equal(thresholdc.toString(), _threshold.toString())
+              })
+          })
+          describe("withdraw function", () => {
+              beforeEach(async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await network.provider.send("evm_increaseTime", [deadline.toNumber() + 1])
+                  await network.provider.request({ method: "evm_mine", params: [] })
+              })
+              it("should check the withdraw state", async () => {
+                  await stakeContract.withdraw()
+                  const stakeState = (await stakeContract._stakeState()).toString()
+                  assert.equal(stakeState, "3")
+              })
+              it('the balance of the contract', async () => {
+                const balance = await ethers.provider.getBalance(stakeContract.address)
+                assert.equal(balance.toString(), "0")
+              });
+              
+          })
       })
