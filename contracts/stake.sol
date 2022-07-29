@@ -3,12 +3,12 @@
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Stake {
-
     error Stake__closed();
     error Stake__sendMoreEth();
     error Stake__deadlineNotReached();
     error Stake__transferFailed();
+
+    contract Stake {
 
     enum StakeState {
         CLOSE,
@@ -41,13 +41,17 @@ contract Stake {
       _stakeState = StakeState.OPEN;
       
     }
-
+     
+     
     modifier waitTimer() {
         if(block.timestamp < deadline){
          revert Stake__deadlineNotReached();
         }
         _;
     }
+
+    /// @notice Explain to an end user what this does
+    /// @dev Explain to a developer any extra details
 
     function deposit() public payable {
       if(_stakeState == StakeState.CLOSE){
@@ -62,7 +66,8 @@ contract Stake {
      emit depositedEth(msg.value, tx.origin);
     }
      // main withdaw function which decides if the user makes a profit or not
-     // it sets the state of the current
+     // it sets the state of the contract
+
     function withdraw() public waitTimer {
       uint256 stakeT = address(this).balance - _interest;
       if( stakeT >= threshold){
