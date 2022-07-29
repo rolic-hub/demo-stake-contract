@@ -9,7 +9,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           const chainId = network.config.chainId
 
           const _amount = networkConfig[chainId]["interestAmount"]
-          const amount = ethers.utils.parseEther(_amount)
+          const interestAmount = ethers.utils.parseEther(_amount)
           const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
 
           beforeEach(async () => {
@@ -22,7 +22,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer.address)
 
-              await stakeFactory.createStake({ value: amount })
+              await stakeFactory.createStake({ value: interestAmount })
               const stakeaddress = await stakeFactory.stakeAddrresses(0)
               stakeContract = await ethers.getContractAt("Stake", stakeaddress, deployer)
               thresholdc = await stakeContract.getThreshold()
@@ -32,7 +32,8 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           describe("constructor", () => {
               it("should check if interest was sent ", async () => {
                   const balance = await ethers.provider.getBalance(stakeContract.address)
-                  assert.equal(balance.toString(), amount.toString())
+                  const totalA = await stakeContract.amountDeposited()
+                  assert.equal(balance.toString(), interestAmount.toString(), totalA.toString())
               })
               it("should check if stakeState is open", async () => {
                   const stakeState = (await stakeContract._stakeState()).toString()
@@ -44,7 +45,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   await stakeContract.deposit({ value: depamount })
               })
               it("should check if a deposit was made", async () => {
-                  const total = parseInt(amount) + parseInt(depamount)
+                  const total = parseInt(interestAmount) + parseInt(depamount)
                   const balance = await ethers.provider.getBalance(stakeContract.address)
                   assert.equal(balance.toString(), total.toString())
               })
@@ -56,16 +57,15 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   const arrayLength = await stakeContract.getStakelength()
                   assert.equal(arrayLength.toString(), "1")
               })
-              it('should check if staker is correct', async () => {
-                const addressC = await stakeContract.getStaker(0)
-                assert.equal(addressC, deployer.address)
-              });
-              
+              it("should check if staker is correct", async () => {
+                  const addressC = await stakeContract.getStaker(0)
+                  assert.equal(addressC, deployer.address)
+              })
           })
           describe("interest, threshold, deadline", () => {
               it("should check how much interest was sent", async () => {
                   const interest = await stakeContract.getInterest()
-                  assert.equal(interest.toString(), amount)
+                  assert.equal(interest.toString(), interestAmount)
               })
               it("should check if threshold was set", async () => {
                   const _threshold = ethers.utils.parseEther(networkConfig[chainId]["threshold"])
@@ -77,16 +77,15 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   await stakeContract.deposit({ value: depamount })
                   await network.provider.send("evm_increaseTime", [deadline.toNumber() + 1])
                   await network.provider.request({ method: "evm_mine", params: [] })
+                  await stakeContract.withdraw()
               })
               it("should check the withdraw state", async () => {
-                  await stakeContract.withdraw()
                   const stakeState = (await stakeContract._stakeState()).toString()
                   assert.equal(stakeState, "3")
               })
-              it('the balance of the contract', async () => {
-                const balance = await ethers.provider.getBalance(stakeContract.address)
-                assert.equal(balance.toString(), "0")
-              });
-              
+              it("the balance of the contract", async () => {
+                  const balance = await stakeContract.amountDeposited()
+                  assert.equal(balance.toString(), interestAmount.toString())
+              })
           })
       })
