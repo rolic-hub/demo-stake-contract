@@ -7,10 +7,9 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
     : describe("Stake Contract tests", () => {
           let stakeContract, deployer, tester, deadline, thresholdc, stakeFactory
           const chainId = network.config.chainId
-
           const _amount = networkConfig[chainId]["interestAmount"]
           const interestAmount = ethers.utils.parseEther(_amount)
-          const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
+          const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"]) 
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
@@ -22,7 +21,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer.address)
 
-              await stakeFactory.createStake({ value: interestAmount })
+              await stakeFactory.createStake()
               const stakeaddress = await stakeFactory.stakeAddrresses(0)
               stakeContract = await ethers.getContractAt("Stake", stakeaddress, deployer)
               thresholdc = await stakeContract.getThreshold()
