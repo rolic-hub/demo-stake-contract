@@ -4,7 +4,7 @@ const networkConfig = {
         interestAmount: "2",
         threshold: "1",
         amountSent: "0.6",
-        interval: "3600",
+        interval: "120",
         value: "5",
     },
     31337: {
@@ -12,7 +12,7 @@ const networkConfig = {
         interestAmount: "2",
         threshold: "1",
         amountSent: "0.6",
-        interval: "3600",
+        interval: "120",
         value: "5",
     },
     4: {

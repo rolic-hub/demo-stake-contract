@@ -1,4 +1,4 @@
-const { assert } = require("chai")
+const { assert, expect } = require("chai")
 const { network, deployments, ethers } = require("hardhat")
 const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 
@@ -9,7 +9,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           const chainId = network.config.chainId
           const _amount = networkConfig[chainId]["interestAmount"]
           const interestAmount = ethers.utils.parseEther(_amount)
-          const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"]) 
+          const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
@@ -20,9 +20,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer.address)
-
-              await stakeFactory.createStake()
-              const stakeaddress = await stakeFactory.stakeAddrresses(0)
+              const stakeaddress = await stakeFactory.stakeAddresses(0)
               stakeContract = await ethers.getContractAt("Stake", stakeaddress, deployer)
               thresholdc = await stakeContract.getThreshold()
               deadline = await stakeContract.getDeadline()
@@ -80,11 +78,25 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               })
               it("should check the withdraw state", async () => {
                   const stakeState = (await stakeContract._stakeState()).toString()
-                  assert.equal(stakeState, "3")
+                  assert.equal(stakeState, "0")
               })
               it("the balance of the contract", async () => {
                   const balance = await stakeContract.amountDeposited()
                   assert.equal(balance.toString(), interestAmount.toString())
               })
+              it("should be reverted because stake is closed", async () => {
+                  await expect(stakeContract.deposit({ value: depamount })).to.be.reverted
+              })
           })
+          describe('perform upkeep function', () => {
+            it('should be reverted because upkeep not needed ', async() => {
+                 await stakeContract.deposit({ value: depamount })
+                 await expect(stakeContract.performUpkeep([])).to.be.reverted
+            });
+            it('', async () => {
+                
+            });
+            
+          });
+          
       })

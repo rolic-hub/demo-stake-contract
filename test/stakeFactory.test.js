@@ -16,8 +16,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer.address)
-              await stakeFactory.createStake()
-              interval = await stakeFactory.interval()
+              interval = await stakeFactory.getInterval()
               deadline = await stakeFactory.getDeadlinefromContract()
           })
           describe("constructor", () => {
@@ -28,7 +27,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   assert.equal(balance.toString(), total.toString())
               })
               it("checks if interval was set", async () => {
-                  const intervalC = await stakeFactory.interval()
+                  const intervalC = await stakeFactory.getInterval()
                   assert.equal(intervalC, networkConfig[chainId]["interval"])
               })
           })
@@ -47,44 +46,4 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   assert.equal(stakers.toString(), "1")
               })
           })
-          describe("perform upkeep", () => {
-              it("should check if perform upkeep works", async () => {
-                  const totalc = deadline.toNumber() + interval.toNumber() 
-                  await network.provider.send("evm_increaseTime", [totalc + 1])
-                  await network.provider.request({ method: "evm_mine", params: [] })
-                  await stakeFactory.performUpkeep([])
-                  const stakers = await stakeFactory.getNoofStakers()
-                  assert.equal(stakers.toString(), "2")
-              })
-              it('should be reverted', async() => {
-                const totalc = deadline.toNumber() + interval.toNumber()
-                await network.provider.send("evm_increaseTime", [totalc - 30])
-                await network.provider.request({ method: "evm_mine", params: [] })
-                 await stakeFactory.performUpkeep([])
-                 const stakers = await stakeFactory.getNoofStakers()
-                 assert.equal(stakers.toString(), "1")
-
-              });
-              
-          })
-          describe('checkUpKeep function', () => {
-            it('returns true ', async () => {
-                const totalc = deadline.toNumber() + interval.toNumber()
-                await network.provider.send("evm_increaseTime", [totalc + 1])
-                await network.provider.request({ method: "evm_mine", params: [] })
-                const { upkeepNeeded } = await stakeFactory.callStatic.checkUpkeep("0x")
-                assert(upkeepNeeded, true)
-            });
-            it('returns false', async () => {
-                 const totalc = deadline.toNumber() + interval.toNumber()
-                 await network.provider.send("evm_increaseTime", [totalc - 1])
-                 await network.provider.request({ method: "evm_mine", params: [] })
-                 const { upkeepNeeded } = await stakeFactory.callStatic.checkUpkeep("0x")
-                 assert(upkeepNeeded, false)
-            });
-            
-            
-            
-          });
-          
       })

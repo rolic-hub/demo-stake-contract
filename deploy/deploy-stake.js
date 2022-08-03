@@ -13,7 +13,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     const stakefactory = await deploy("StakeFactory", {
         from: deployer,
-        args: arguments,
+        args: [],
         log: true,
         value: msgvalue
         //gasLimit: 8000000

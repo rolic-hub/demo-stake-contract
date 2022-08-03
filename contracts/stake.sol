@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
 error Stake__closed();
 error Stake__sendMoreEth();
 error Stake__deadlineNotReached();
 error Stake__transferFailed();
+error stake__UpkeepNotNeeded();
 
 contract Stake {
     enum StakeState {
@@ -20,8 +22,10 @@ contract Stake {
 
     uint256 private _interest;
     uint256 private _contractBalance = address(this).balance;
-    uint256 private immutable deadline = block.timestamp.add(3 minutes);
+    //uint256 private immutable deadline = block.timestamp.add(3 minutes);
+    uint256 private immutable deadline = 3 minutes;
     uint256 private constant threshold = 1 ether;
+    uint256 private s_lastTimeStamp;
     StakeState public _stakeState;
     uint256 private _totalStake = _contractBalance.sub(_interest);
 
@@ -38,10 +42,11 @@ contract Stake {
         _interest = msg.value;
 
         _stakeState = StakeState.OPEN;
+        s_lastTimeStamp = block.timestamp;
     }
 
     modifier waitTimer() {
-        if (block.timestamp < deadline) {
+        if (block.timestamp.sub(s_lastTimeStamp) < deadline) {
             revert Stake__deadlineNotReached();
         }
         _;
@@ -67,7 +72,6 @@ contract Stake {
     // it sets the state of the contract
 
     function withdraw() public waitTimer {
-         _stakeState = StakeState.CLOSE;
         uint256 stakeT = address(this).balance - _interest;
         if (stakeT >= threshold) {
             _stakeState = StakeState.WINTEREST;
@@ -76,9 +80,33 @@ contract Stake {
             _stakeState = StakeState.WOINTEREST;
             withdrawWOinterest();
         }
-        // if (address(this).balance <= 0) {
-        //     _stakeState = StakeState.CLOSE;
-        // }
+        _stakeState = StakeState.CLOSE;
+    }
+
+    function checkUpkeep(
+        bytes memory /*checkData*/
+    )
+        public
+        view
+        returns (
+            bool upkeepNeeded,
+            bytes memory /*performData*/
+        )
+    {
+        bool timePassed = (block.timestamp.sub(s_lastTimeStamp)) > deadline;
+        bool balanceC = (address(this).balance > 0);
+        upkeepNeeded = (balanceC && timePassed);
+        return (upkeepNeeded, "0x0");
+    }
+
+    function performUpkeep(
+        bytes calldata /*performData*/
+    ) external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert stake__UpkeepNotNeeded();
+        }
+        _stakeState = StakeState.CLOSE;
     }
 
     // withdraw without interest is called when the amount deposited
@@ -144,7 +172,7 @@ contract Stake {
         return _interest;
     }
 
-    function getDeadline() public view returns (uint256) {
+    function getDeadline() public pure returns (uint256) {
         return deadline;
     }
 
