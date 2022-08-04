@@ -12,7 +12,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
 
           beforeEach(async () => {
-              ;[deployer, tester, addr2] = await hre.ethers.getSigners()
+              [deployer, tester, addr2] = await ethers.getSigners()
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer)

@@ -12,7 +12,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     //const msgvalue = ethers.utils.parseEther(networkConfig[chainId]["value"])
 
 
-    log("--------------------------------------------------------------------------------------")
+    log("--------------------------------------------------------------------------------------------------------")
 
     const upKeepContract = await deploy("UpkeepCreator", {
         from: deployer,
