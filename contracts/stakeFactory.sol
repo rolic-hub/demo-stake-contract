@@ -11,17 +11,19 @@ contract StakeFactory {
     uint256 private profit = 2 ether;
     uint256 private constant interval = 2 minutes;
 
+    event createdStake(address stakeContract );
+
     constructor() payable {
         (bool callSuccess, ) = address(this).call{value: msg.value}("");
         if (!callSuccess) {
             revert Stake__transferFailed();
         }
-        createStake();
     }
 
     function createStake() public payable {
         Stake stakeContract = new Stake{value: profit}();
         stakeAddresses.push(stakeContract);
+         emit createdStake(address(stakeContract));
     }
 
     function getDeadlinefromContract() public view returns (uint256) {

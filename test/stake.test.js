@@ -12,14 +12,10 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           const depamount = ethers.utils.parseEther(networkConfig[chainId]["amountSent"])
 
           beforeEach(async () => {
-              const accounts = await ethers.getSigners()
-
-              deployer = accounts[0]
-              tester = accounts[1]
-
+              ;[deployer, tester, addr2] = await hre.ethers.getSigners()
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
-              await stakeFactory.connect(deployer.address)
+              await stakeFactory.connect(deployer)
               const stakeaddress = await stakeFactory.stakeAddresses(0)
               stakeContract = await ethers.getContractAt("Stake", stakeaddress, deployer)
               thresholdc = await stakeContract.getThreshold()
@@ -88,15 +84,61 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   await expect(stakeContract.deposit({ value: depamount })).to.be.reverted
               })
           })
-          describe('perform upkeep function', () => {
-            it('should be reverted because upkeep not needed ', async() => {
-                 await stakeContract.deposit({ value: depamount })
-                 await expect(stakeContract.performUpkeep([])).to.be.reverted
-            });
-            it('', async () => {
-                
-            });
-            
-          });
-          
+          describe("perform upkeep function", () => {
+              it("should be reverted because upkeep not needed ", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await network.provider.send("evm_increaseTime", [deadline.toNumber() - 5])
+                  await network.provider.request({ method: "evm_mine", params: [] })
+                  await expect(stakeContract.performUpkeep([])).to.be.reverted
+              })
+              it("should be reverted because stake is closed", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await network.provider.send("evm_increaseTime", [deadline.toNumber() + 1])
+                  await network.provider.request({ method: "evm_mine", params: [] })
+                  await stakeContract.performUpkeep([])
+                  await expect(stakeContract.deposit({ value: depamount })).to.be.reverted
+              })
+              it("should revert because stake deadline not reached", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await expect(stakeContract.withdraw()).to.be.reverted
+              })
+          })
+          describe("check Upkeep function", () => {
+              it("should return false ", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await network.provider.send("evm_increaseTime", [deadline.toNumber() - 5])
+                  await network.provider.request({ method: "evm_mine", params: [] })
+                  const { upkeepNeeded } = await stakeContract.callStatic.checkUpkeep("0x")
+                  assert(upkeepNeeded == false)
+              })
+              it("should return true", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  await network.provider.send("evm_increaseTime", [deadline.toNumber() + 5])
+                  await network.provider.request({ method: "evm_mine", params: [] })
+                  const { upkeepNeeded } = await stakeContract.callStatic.checkUpkeep("0x")
+                  assert(upkeepNeeded == true)
+              })
+          })
+          describe("second staker test", () => {
+              beforeEach(async () => {
+                  await stakeFactory.connect(tester)
+                  const stakeaddress = await stakeFactory.stakeAddresses(0)
+                  stakeContract = await ethers.getContractAt("Stake", stakeaddress, tester)
+              })
+              it("should emit deposited eth event", async () => {
+                  await expect(stakeContract.deposit({ value: depamount }))
+                      .to.emit(stakeContract, "depositedEth")
+                      .withArgs(depamount, tester.address)
+              })
+              it("should check that our array was updated", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  const arrayLength = await stakeContract.getStakelength()
+                  assert.equal(arrayLength.toString(), "1")
+              })
+              it("should check if the mapping was updated", async () => {
+                  await stakeContract.deposit({ value: depamount })
+                  const mapBalance = await stakeContract.balances(tester.address)
+                  assert.equal(mapBalance.toString(), depamount.toString())
+              })
+          })
       })

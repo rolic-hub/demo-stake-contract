@@ -12,7 +12,7 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY
 const RINKEBY_RPC_URL = process.env.RINKEBY_ALCHEMY_API_URL
 const POLYGON_RPC_URL = process.env.POLYGON_ALCHEMY_API_URL
 const PRIVATE_KEY = process.env.PRIVATE_KEY
-
+const MAINNET_RPC_URL = process.env.MAINNET_ALCHEMY_API_URL
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     solidity: "0.8.9",
@@ -28,10 +28,9 @@ module.exports = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            // // If you want to do some forking, uncomment this
-            // forking: {
-            //   url: MAINNET_RPC_URL
-            // }
+            forking: {
+                url: MAINNET_RPC_URL,
+            },
             chainId: 31337,
             // saveDeployments: true,
         },
@@ -56,7 +55,7 @@ module.exports = {
         // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>
         apiKey: {
             rinkeby: ETHERSCAN_API_KEY,
-           // polygon: POLYGONSCAN_API_KEY,
+            // polygon: POLYGONSCAN_API_KEY,
         },
     },
     gasReporter: {
