@@ -1,11 +1,13 @@
-const { ethers, network } = require("hardhat")
+const { ethers, network, deployments } = require("hardhat")
 const { networkConfig } = require("../helper-hardhat-config")
 
 async function registerUpkeep() {
+    console.log("--------------------registering upkeep ----------------")
+    await deployments.fixture(["all"])
     const stakeFactory = await ethers.getContract("StakeFactory")
     const createStake = await stakeFactory.createStake()
     const txReceipt = await createStake.wait(1)
-    const stakeAddress = txReceipt.events[1].args.stakeContract
+    const stakeAddress = txReceipt.events[0].args.stakeContract
     console.log(`created stake at stake Address: ${stakeAddress}`)
     const chainId = network.config.chainId
     await createUpKeep(stakeAddress, "stake", networkConfig[chainId]["CheckGasLimit"])

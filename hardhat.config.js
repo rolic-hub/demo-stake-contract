@@ -13,7 +13,9 @@ const RINKEBY_RPC_URL = process.env.RINKEBY_ALCHEMY_API_URL
 const POLYGON_RPC_URL = process.env.POLYGON_ALCHEMY_API_URL
 const PRIVATE_KEY = process.env.PRIVATE_KEY
 const MAINNET_RPC_URL = process.env.MAINNET_ALCHEMY_API_URL
+
 /** @type import('hardhat/config').HardhatUserConfig */
+
 module.exports = {
     solidity: "0.8.9",
     namedAccounts: {
@@ -30,6 +32,7 @@ module.exports = {
         hardhat: {
             forking: {
                 url: MAINNET_RPC_URL,
+                blockNumber: 15284172,
             },
             chainId: 31337,
             // saveDeployments: true,

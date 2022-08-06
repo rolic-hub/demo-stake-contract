@@ -1,8 +1,8 @@
-const { ethers,  getNamedAccounts, deployments } = require("hardhat")
+const { ethers, getNamedAccounts, deployments } = require("hardhat")
 
 async function fundContract() {
     console.log("funding contract address")
-     await deployments.fixture(["all"])
+    await deployments.fixture(["all"])
     const { deployer } = await getNamedAccounts()
     const stakeFactory = await ethers.getContract("StakeFactory")
     const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/", 31337)
@@ -14,7 +14,6 @@ async function fundContract() {
     })
     const txReciept = await (await tx).wait(1)
     console.log(`funding sucessfull `)
-    
 }
 
 fundContract()

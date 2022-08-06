@@ -10,12 +10,11 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           amountSent = ethers.utils.parseEther(networkConfig[chainId]["value"])
 
           beforeEach(async () => {
-              const accounts = await ethers.getSigners()
-              deployer = accounts[0]
-              tester = accounts[1]
+              ;[deployer, tester] = await ethers.getSigners()
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
               await stakeFactory.connect(deployer.address)
+              await stakeFactory.createStake()
               interval = await stakeFactory.getInterval()
               deadline = await stakeFactory.getDeadlinefromContract()
           })
@@ -44,6 +43,17 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               it("checks the no. of stakers", async () => {
                   const stakers = await stakeFactory.getNoofStakers()
                   assert.equal(stakers.toString(), "1")
+              })
+          })
+          describe("withdraw function", () => {
+              it("should check that the withdraw function works well", async () => {
+                  const balance = await ethers.provider.getBalance(stakeFactory.address)
+                  await stakeFactory.withdraw(balance)
+                  await expect(await ethers.provider.getBalance(stakeFactory.address)).equal("0")
+              })
+              it("should throw an error if the caller is not the owner", async () => {
+                  const balance = await ethers.provider.getBalance(stakeFactory.address)
+                  await expect(stakeFactory.connect(tester).withdraw(balance)).to.be.reverted
               })
           })
       })

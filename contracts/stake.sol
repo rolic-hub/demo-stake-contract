@@ -10,7 +10,14 @@ error Stake__deadlineNotReached();
 error Stake__transferFailed();
 error stake__UpkeepNotNeeded();
 
+/**@title A sample Stake Contract
+ * @author Heeze
+ * @notice This contract is for creating a stake contract
+ * @dev This contract uses the Chainlink Keepers to automate functions
+ */
+
 contract Stake {
+    /* Type declarations */
     enum StakeState {
         CLOSE,
         OPEN,
@@ -19,6 +26,8 @@ contract Stake {
     }
 
     using SafeMath for uint256;
+
+    /* State variables */
 
     uint256 private _interest;
     uint256 private _contractBalance = address(this).balance;
@@ -32,8 +41,10 @@ contract Stake {
     mapping(address => uint256) public balances;
     address[] private stakers;
 
+    /* Events */
     event depositedEth(uint256 amount, address sender);
 
+    /* Functions */
     constructor() payable {
         (bool callSuccess, ) = payable(address(this)).call{value: msg.value}("");
         if (!callSuccess) {
@@ -83,6 +94,15 @@ contract Stake {
         _stakeState = StakeState.CLOSE;
     }
 
+    /**
+     @dev This is the function that the Chainlink Keeper nodes call
+     they look for `upkeepNeeded` to return True.
+     UpkeepNeeded returns true if 
+     1.. if the difference between the current block.timestamp
+         and s_lastTimeStamp is greater than the interval
+      2.. if the balance of the contract is equal to zero    
+      */
+
     function checkUpkeep(
         bytes memory /*checkData*/
     )
@@ -125,9 +145,10 @@ contract Stake {
         }
     }
 
-    // withdraw with interest is called when the amount
-    // deposited is greater than the threshold set
-    // when called it sends token deposited plus a calculated profit
+    /** withdraw with interest is called when the amount
+     deposited is greater than the threshold set
+     when called it sends token deposited plus a calculated profit 
+     */
 
     function withdrawWInterest() internal {
         if (_stakeState != StakeState.WINTEREST) {
@@ -147,6 +168,8 @@ contract Stake {
         uint256 totalAmount = _amount + calculate;
         return totalAmount;
     }
+
+    /** Getter Functions */
 
     function amountDeposited() public view returns (uint256) {
         return address(this).balance;
