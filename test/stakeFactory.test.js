@@ -10,10 +10,10 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           amountSent = ethers.utils.parseEther(networkConfig[chainId]["value"])
 
           beforeEach(async () => {
-              ;[deployer, tester] = await ethers.getSigners()
+              [deployer, tester] = await ethers.getSigners()
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
-              await stakeFactory.connect(deployer.address)
+              //await stakeFactory.connect(deployer)
               await stakeFactory.createStake()
               interval = await stakeFactory.getInterval()
               deadline = await stakeFactory.getDeadlinefromContract()
