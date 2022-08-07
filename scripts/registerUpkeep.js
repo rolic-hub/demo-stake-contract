@@ -5,12 +5,13 @@ async function registerUpkeep() {
     console.log("--------------------registering upkeep ----------------")
     await deployments.fixture(["all"])
     const stakeFactory = await ethers.getContract("StakeFactory")
-    const createStake = await stakeFactory.createStake()
-    const txReceipt = await createStake.wait(1)
-    const stakeAddress = txReceipt.events[0].args.stakeContract
-    console.log(`created stake at stake Address: ${stakeAddress}`)
-    const chainId = network.config.chainId
-    await createUpKeep(stakeAddress, "stake", networkConfig[chainId]["CheckGasLimit"])
+    
+    stakeFactory.on("createdStake", async (stakeContract, event) => {
+        console.log(`created stake at stake Address: ${stakeContract}`)
+        const chainId = network.config.chainId
+        await createUpKeep(stakeContract, "stake", networkConfig[chainId]["CheckGasLimit"])
+        console.log(event)
+    })
 }
 
 async function createUpKeep(contratAddressToAutomate, upkeepName, gasLimit) {
