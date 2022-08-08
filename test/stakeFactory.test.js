@@ -43,6 +43,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               it("checks the no. of stakers", async () => {
                   const stakers = await stakeFactory.getNoofStakers()
                   assert.equal(stakers.toString(), "1")
+                
               })
           })
           describe("withdraw function", () => {

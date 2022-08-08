@@ -12,6 +12,7 @@ async function registerUpkeep() {
         await createUpKeep(stakeContract, "stake", networkConfig[chainId]["CheckGasLimit"])
         console.log(event)
     })
+    await stakeFactory.createStake();
 }
 
 async function createUpKeep(contratAddressToAutomate, upkeepName, gasLimit) {

@@ -27,9 +27,9 @@ module.exports = {
             default: 1,
         },
     },
-    defaultNetwork: "hardhat",
+    defaultNetwork: "localhost",
     networks: {
-        hardhat: {
+        localhost: {
             forking: {
                 url: MAINNET_RPC_URL,
                 blockNumber: 15284172,
@@ -37,10 +37,10 @@ module.exports = {
             chainId: 31337,
             // saveDeployments: true,
         },
-        localhost: {
-            chainId: 31337,
-            // saveDeployments: true,
-        },
+        // localhost: {
+        //     chainId: 31337,
+        //     // saveDeployments: true,
+        // },
         rinkeby: {
             url: RINKEBY_RPC_URL,
             accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
