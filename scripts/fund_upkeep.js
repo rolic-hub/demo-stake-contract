@@ -1,9 +1,9 @@
 const { ethers } = require("hardhat")
+const {BigNumber} = require('ethers')
 //const Abi = require("../constants/linkAbi.json")
-const {fetchJson} = require("ethers/lib/utils")
-const {networkConfig, impersonate} = require("../helper-hardhat-config")
-const {network} = require("hardhat")
-
+const { fetchJson } = require("ethers/lib/utils")
+const { networkConfig, impersonate } = require("../helper-hardhat-config")
+const { network } = require("hardhat")
 
 const chainId = network.config.chainId
 const linkAddress = networkConfig[chainId]["LINK_TOKEN_ADDRESS"]
@@ -31,9 +31,17 @@ async function fundUpkeep() {
     const linkContract = new ethers.Contract(linkAddress, Abi, signer)
     const balance = await linkContract.balanceOf(impersonateAccount)
     //console.log(ethers.utils.formatUnits(balance, 8))
+    const createUpkeep = await ethers.getContract("UpkeepCreator")
+    const contractAddress = createUpkeep.address
+    const value = 5000000000
+    // const amount = 5000000000;
+    // const value = ethers.utils.formatUnits(amount.toString(), 8)
 
-
-}
+    await linkContract.transfer(contractAddress, value)
+    const contractBalance = await linkContract.balanceOf(contractAddress)
+    console.log(contractBalance.toString())
+    console.log("..........funded createUpkeep contract...........")
+}   
 
 fundUpkeep()
     .then(() => process.exit(0))
