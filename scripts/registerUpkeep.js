@@ -24,7 +24,7 @@ async function registerUpkeep() {
 }
 
 async function createUpKeep(contratAddressToAutomate, upkeepName, gasLim) {
-    const upKeepContract = await ethers.getContract("UpkeepIDConsumerExample")
+    const upKeepContract = await ethers.getContract("UpkeepIDConsumer")
     const createUpKeep = await upKeepContract.registerAndPredictID(
         upkeepName,
         "0x",

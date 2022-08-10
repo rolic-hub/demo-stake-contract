@@ -82,7 +82,7 @@ interface KeeperRegistrarInterface {
   ) external;
 }
 
-contract UpkeepIDConsumerExample {
+contract UpkeepIDConsumer {
   LinkTokenInterface public immutable i_link;
   address public immutable registrar;
   KeeperRegistryInterface public immutable i_registry;

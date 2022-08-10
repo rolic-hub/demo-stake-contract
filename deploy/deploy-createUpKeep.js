@@ -14,7 +14,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     log("--------------------------------------------------------------------------------------------------------")
 
-    const upKeepContract = await deploy("UpkeepIDConsumerExample", {
+    const upKeepContract = await deploy("UpkeepIDConsumer", {
         from: deployer,
         args: arguments,
         log: true,
