@@ -21,9 +21,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log("----------------------------------deployed stake Factory ---------------------------")
   
 
-    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
-        log("Verifying...")
-        await verify(stakefactory.address, [])
-    }
+    // if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+    //     log("Verifying...")
+    //     await verify(stakefactory.address, [])
+    // }
 }
 module.exports.tags = ["all", "stakeFactory"]

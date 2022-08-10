@@ -14,7 +14,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     log("--------------------------------------------------------------------------------------------------------")
 
-    const upKeepContract = await deploy("UpkeepCreator", {
+    const upKeepContract = await deploy("UpkeepIDConsumerExample", {
         from: deployer,
         args: arguments,
         log: true,
@@ -23,9 +23,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
      log("--------------------------------------deployed ukpeep creator------------------------------------------------")
 
 
-    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
-        log("Verifying...")
-        await verify(upKeepContract.address, [])
-    }
+    // if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+    //     log("Verifying...")
+    //     await verify(upKeepContract.address, [])
+    // }
 }
 module.exports.tags = ["all", "upKeepContract"]

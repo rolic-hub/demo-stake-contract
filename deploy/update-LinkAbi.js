@@ -5,7 +5,7 @@ const { fetchJson } = require("ethers/lib/utils")
 //const {abi} = require("../utils/linkAbi.json")
 
 const chainId = network.config.chainId
-const linkAddress = networkConfig[chainId]["LINK_TOKEN_ADDRESS"]
+const linkAddress = networkConfig[chainId]["ERC677_LINK_ADDRESS"]
 
 module.exports = async function linkAbi() {
     if (process.env.LINKABI) {
@@ -32,4 +32,4 @@ async function abiUpdate() {
     })
 }
 
-module.exports.tags = ["all", "abiUpdate"]
+module.exports.tags = ["abiUpdate"]

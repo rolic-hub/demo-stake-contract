@@ -21,13 +21,13 @@ module.exports = {
     namedAccounts: {
         deployer: {
             default: 0, // here this will by default take the first account as deployer
-            1: 0, 
+            1: 0,
         },
         player: {
             default: 1,
         },
     },
-    defaultNetwork: "localhost",
+    defaultNetwork: "hardhat",
     networks: {
         localhost: {
             forking: {
@@ -37,21 +37,23 @@ module.exports = {
             chainId: 31337,
             // saveDeployments: true,
         },
-        // localhost: {
-        //     chainId: 31337,
-        //     // saveDeployments: true,
-        // },
+        hardhat: {
+            chainId: 31337,
+            // saveDeployments: true,
+        },
         rinkeby: {
             url: RINKEBY_RPC_URL,
             accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
             saveDeployments: true,
             chainId: 4,
+            saveDeployments: true,
         },
         polygon: {
             url: POLYGON_RPC_URL,
             accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
             saveDeployments: true,
             chainId: 80001,
+            saveDeployments: true,
         },
     },
     etherscan: {
@@ -73,6 +75,6 @@ module.exports = {
         only: ["stake"],
     },
     mocha: {
-        timeout: 500000, // 500 seconds max for running tests
+       // timeout: 500000, // 500 seconds max for running tests
     },
 }
