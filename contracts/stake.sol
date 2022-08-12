@@ -8,7 +8,6 @@ error Stake__closed();
 error Stake__sendMoreEth();
 error Stake__deadlineNotReached();
 error Stake__transferFailed();
-error stake__UpkeepNotNeeded();
 
 /**@title A sample Stake Contract
  * @author Heeze
@@ -31,7 +30,6 @@ contract Stake {
 
     uint256 private _interest;
     uint256 private _contractBalance = address(this).balance;
-    //uint256 private immutable deadline = block.timestamp.add(3 minutes);
     uint256 private immutable deadline = 3 minutes;
     uint256 private constant threshold = 1 ether;
     uint256 private s_lastTimeStamp;

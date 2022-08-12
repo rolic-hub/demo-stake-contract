@@ -11,17 +11,20 @@ error Stake__NotOwner();
 contract StakeFactory {
     Stake[] public stakeAddresses;
     uint256 private profit = 0.22 ether;
-    uint256 private constant interval = 2 minutes;
+    uint256 private immutable i_interval;
     address public /* immutable */ i_owner;
+    uint256 private s_lastTimeStamp;
 
     event createdStake(address indexed stakeContract);
 
-    constructor() payable {
+    constructor(uint256 _interval) payable {
         (bool callSuccess, ) = address(this).call{value: msg.value}("");
         if (!callSuccess) {
             revert Stake__transferFailed();
         }
          i_owner = msg.sender;
+         i_interval = _interval;
+         s_lastTimeStamp = block.timestamp;
     }
 
      modifier onlyOwner {
@@ -30,7 +33,15 @@ contract StakeFactory {
         _;
     }
 
-    function createStake() public payable {
+      modifier waitTimer {
+      if ((block.timestamp - s_lastTimeStamp) < i_interval) {
+            revert Stake__deadlineNotReached();
+        }
+        _;
+    }
+
+    function createStake() public payable waitTimer {
+  
         Stake stakeContract = new Stake{value: profit}();
         stakeAddresses.push(stakeContract);
         emit createdStake(address(stakeContract));
@@ -64,8 +75,8 @@ contract StakeFactory {
         return profit;
     }
 
-    function getInterval() public pure returns (uint256) {
-        return interval;
+    function getInterval() public view returns (uint256) {
+        return i_interval;
     }
 
     fallback() external payable {

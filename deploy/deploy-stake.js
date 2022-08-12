@@ -7,12 +7,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
     const msgvalue = ethers.utils.parseEther(networkConfig[chainId]["value"])
-
+    const interval = networkConfig[chainId]["interval"]
+    let arguments = [interval]
     log("----------------------------------------------------------------------------")
 
     const stakefactory = await deploy("StakeFactory", {
         from: deployer,
-        args: [],
+        args: arguments,
         log: true,
         value: msgvalue,
         //gasLimit: 8000000
