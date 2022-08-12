@@ -10,7 +10,7 @@ error Stake__NotOwner();
 
 contract StakeFactory {
     Stake[] public stakeAddresses;
-    uint256 private profit = 0.2 ether;
+    uint256 private profit = 0.22 ether;
     uint256 private constant interval = 2 minutes;
     address public /* immutable */ i_owner;
 

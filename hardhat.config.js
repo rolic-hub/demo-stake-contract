@@ -29,7 +29,7 @@ module.exports = {
     },
     defaultNetwork: "hardhat",
     networks: {
-        localhost: {
+        hardhat: {
             forking: {
                 url: MAINNET_RPC_URL,
                 blockNumber: 15284172,
@@ -37,7 +37,7 @@ module.exports = {
             chainId: 31337,
             // saveDeployments: true,
         },
-        hardhat: {
+        localhost: {
             chainId: 31337,
             // saveDeployments: true,
         },

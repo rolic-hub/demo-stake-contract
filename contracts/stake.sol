@@ -56,6 +56,15 @@ contract Stake {
         s_lastTimeStamp = block.timestamp;
     }
 
+    modifier closeStake() {
+        bool timePassed = (block.timestamp.sub(s_lastTimeStamp)) > deadline;
+        bool balanceC = (address(this).balance > 0);
+        if (timePassed && balanceC) {
+            _stakeState = StakeState.CLOSE;
+        }
+        _;
+    }
+
     modifier waitTimer() {
         if (block.timestamp.sub(s_lastTimeStamp) < deadline) {
             revert Stake__deadlineNotReached();
@@ -63,10 +72,7 @@ contract Stake {
         _;
     }
 
-    /// @notice Explain to an end user what this does
-    /// @dev Explain to a developer any extra details
-
-    function deposit() public payable {
+    function deposit() public payable closeStake {
         if (_stakeState == StakeState.CLOSE) {
             revert Stake__closed();
         }
@@ -83,48 +89,13 @@ contract Stake {
     // it sets the state of the contract
 
     function withdraw() public waitTimer {
-        uint256 stakeT = address(this).balance - _interest;
+        uint256 stakeT = address(this).balance.sub(_interest);
         if (stakeT >= threshold) {
             _stakeState = StakeState.WINTEREST;
             withdrawWInterest();
         } else {
             _stakeState = StakeState.WOINTEREST;
             withdrawWOinterest();
-        }
-        _stakeState = StakeState.CLOSE;
-    }
-
-    /**
-     @dev This is the function that the Chainlink Keeper nodes call
-     they look for `upkeepNeeded` to return True.
-     UpkeepNeeded returns true if 
-     1.. if the difference between the current block.timestamp
-         and s_lastTimeStamp is greater than the interval
-      2.. if the balance of the contract is equal to zero    
-      */
-
-    function checkUpkeep(
-        bytes memory /*checkData*/
-    )
-        public
-        view
-        returns (
-            bool upkeepNeeded,
-            bytes memory /*performData*/
-        )
-    {
-        bool timePassed = (block.timestamp.sub(s_lastTimeStamp)) > deadline;
-        bool balanceC = (address(this).balance > 0);
-        upkeepNeeded = (balanceC && timePassed);
-        return (upkeepNeeded, "0x0");
-    }
-
-    function performUpkeep(
-        bytes calldata /*performData*/
-    ) external {
-        (bool upkeepNeeded, ) = checkUpkeep("");
-        if (!upkeepNeeded) {
-            revert stake__UpkeepNotNeeded();
         }
         _stakeState = StakeState.CLOSE;
     }
@@ -165,7 +136,7 @@ contract Stake {
 
     function calculateInterest(uint256 _amount, uint256 _total) internal view returns (uint256) {
         uint256 calculate = (_amount.div(_total)).mul(_interest);
-        uint256 totalAmount = _amount + calculate;
+        uint256 totalAmount = _amount.add(calculate);
         return totalAmount;
     }
 

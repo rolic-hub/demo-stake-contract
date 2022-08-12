@@ -24,10 +24,10 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
           })
 
           describe("constructor", () => {
-              it("should check if interest was sent ", async () => {
+              it("should check if interest was sent", async () => {
                   const balance = await ethers.provider.getBalance(stakeContract.address)
                   const totalA = await stakeContract.amountDeposited()
-                  assert.equal(balance.toString(), interestAmount.toString(), totalA.toString())
+                  assert.equal(balance.toString(), totalA.toString())
               })
               it("should check if stakeState is open", async () => {
                   const stakeState = (await stakeContract._stakeState()).toString()
@@ -54,6 +54,11 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               it("should check if staker is correct", async () => {
                   const addressC = await stakeContract.getStaker(0)
                   assert.equal(addressC, deployer.address)
+              })
+              it("should revert because stake is closed ", async () => {
+                await network.provider.send("evm_increaseTime", [deadline.toNumber() + 1])
+                await network.provider.request({ method: "evm_mine", params: [] })
+                await expect( stakeContract.deposit({ value: depamount })).to.be.reverted
               })
           })
           describe("interest, threshold, deadline", () => {
@@ -85,41 +90,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   await expect(stakeContract.deposit({ value: depamount })).to.be.reverted
               })
           })
-          describe("perform upkeep function", () => {
-              it("should be reverted because upkeep not needed ", async () => {
-                  await stakeContract.deposit({ value: depamount })
-                  await network.provider.send("evm_increaseTime", [deadline.toNumber() - 5])
-                  await network.provider.request({ method: "evm_mine", params: [] })
-                  await expect(stakeContract.performUpkeep([])).to.be.reverted
-              })
-              it("should be reverted because stake is closed", async () => {
-                  await stakeContract.deposit({ value: depamount })
-                  await network.provider.send("evm_increaseTime", [deadline.toNumber() + 1])
-                  await network.provider.request({ method: "evm_mine", params: [] })
-                  await stakeContract.performUpkeep([])
-                  await expect(stakeContract.deposit({ value: depamount })).to.be.reverted
-              })
-              it("should revert because stake deadline not reached", async () => {
-                  await stakeContract.deposit({ value: depamount })
-                  await expect(stakeContract.withdraw()).to.be.reverted
-              })
-          })
-          describe("check Upkeep function", () => {
-              it("should return false ", async () => {
-                  await stakeContract.deposit({ value: depamount })
-                  await network.provider.send("evm_increaseTime", [deadline.toNumber() - 5])
-                  await network.provider.request({ method: "evm_mine", params: [] })
-                  const { upkeepNeeded } = await stakeContract.callStatic.checkUpkeep("0x")
-                  assert(upkeepNeeded == false)
-              })
-              it("should return true", async () => {
-                  await stakeContract.deposit({ value: depamount })
-                  await network.provider.send("evm_increaseTime", [deadline.toNumber() + 5])
-                  await network.provider.request({ method: "evm_mine", params: [] })
-                  const { upkeepNeeded } = await stakeContract.callStatic.checkUpkeep("0x")
-                  assert(upkeepNeeded == true)
-              })
-          })
+          
           describe("second staker test", () => {
               beforeEach(async () => {
                   await stakeFactory.connect(tester)
@@ -142,4 +113,5 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   assert.equal(mapBalance.toString(), depamount.toString())
               })
           })
+          
       })
