@@ -40,9 +40,6 @@ contract StakeFactory {
          i_priceFeed = _priceFeed;
     }
 
-   
-    
-
     function createStake() public payable {
         if((block.timestamp - s_lastTimeStamp) < i_interval) {
             revert Stake__NotOpen();

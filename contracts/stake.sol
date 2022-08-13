@@ -3,6 +3,7 @@
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./PriceConverter.sol";
 
 error Stake__closed();
@@ -78,6 +79,12 @@ contract Stake {
         s_priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
+    function getPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        // ETH/USD rate in 18 digit
+        return uint256(answer * 10000000000);
+    }
+
     function deposit() public payable closeStake {
         if (_stakeState == StakeState.CLOSE) {
             revert Stake__closed();
@@ -85,15 +92,15 @@ contract Stake {
         if (msg.value.getConversionRate(s_priceFeed) <= fee) {
             revert Stake__sendMoreEth();
         }
-        uint256 feeC = fee / 1* 10**21;
+        uint256 feeC = fee / getPrice(s_priceFeed);
         uint256 amount = msg.value - feeC;
         (bool callSuccess, ) = payable(to).call{value: fee}("");
         if (!callSuccess) {
             revert Stake__transferFailed();
         }
-        balances[tx.origin] += amount;
-        stakers.push(tx.origin);
-        emit depositedEth(amount, tx.origin);
+        balances[msg.sender] += amount;
+        stakers.push(msg.sender);
+        emit depositedEth(amount, msg.sender);
     }
 
     // main withdaw function which decides if the user makes a profit or not
@@ -120,7 +127,7 @@ contract Stake {
         if (_stakeState != StakeState.WOINTEREST) {
             revert();
         }
-        uint256 amount = balances[tx.origin];
+        uint256 amount = balances[msg.sender];
         balances[tx.origin] = 0;
         (bool callSuccess, ) = payable(tx.origin).call{value: amount}("");
         if (!callSuccess) {
@@ -137,7 +144,7 @@ contract Stake {
         if (_stakeState != StakeState.WINTEREST) {
             revert();
         }
-        uint256 amount = balances[tx.origin];
+        uint256 amount = balances[msg.sender];
         uint256 calculatedIn = calculateInterest(amount, _totalStake);
         balances[tx.origin] = 0;
         (bool callSuccess, ) = payable(tx.origin).call{value: calculatedIn}("");
