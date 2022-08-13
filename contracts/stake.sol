@@ -3,6 +3,7 @@
 pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
+import "./PriceConverter.sol";
 
 error Stake__closed();
 error Stake__sendMoreEth();
@@ -25,16 +26,20 @@ contract Stake {
     }
 
     using SafeMath for uint256;
+    using PriceConverter for uint256;
 
     /* State variables */
 
     uint256 private _interest;
     uint256 private _contractBalance = address(this).balance;
     uint256 private immutable deadline = 3 minutes;
-    uint256 private constant threshold = 1 ether;
+    uint256 private constant threshold = 1500 * 10**18;
     uint256 private s_lastTimeStamp;
+    uint256 private immutable fee = 20 * 10**18;
     StakeState public _stakeState;
     uint256 private _totalStake = _contractBalance.sub(_interest);
+    address private to;
+    AggregatorV3Interface private s_priceFeed;
 
     mapping(address => uint256) public balances;
     address[] private stakers;
@@ -42,18 +47,7 @@ contract Stake {
     /* Events */
     event depositedEth(uint256 amount, address sender);
 
-    /* Functions */
-    constructor() payable {
-        (bool callSuccess, ) = payable(address(this)).call{value: msg.value}("");
-        if (!callSuccess) {
-            revert Stake__transferFailed();
-        }
-        _interest = msg.value;
-
-        _stakeState = StakeState.OPEN;
-        s_lastTimeStamp = block.timestamp;
-    }
-
+    /* Modifiers */
     modifier closeStake() {
         bool timePassed = (block.timestamp.sub(s_lastTimeStamp)) > deadline;
         bool balanceC = (address(this).balance > 0);
@@ -70,24 +64,44 @@ contract Stake {
         _;
     }
 
+    /* Functions */
+    constructor(address _to, address _priceFeed) payable {
+        (bool callSuccess, ) = payable(address(this)).call{value: msg.value}("");
+        if (!callSuccess) {
+            revert Stake__transferFailed();
+        }
+        _interest = msg.value;
+
+        _stakeState = StakeState.OPEN;
+        s_lastTimeStamp = block.timestamp;
+        to = _to;
+        s_priceFeed = AggregatorV3Interface(_priceFeed);
+    }
+
     function deposit() public payable closeStake {
         if (_stakeState == StakeState.CLOSE) {
             revert Stake__closed();
         }
-        if (msg.value <= 0) {
+        if (msg.value.getConversionRate(s_priceFeed) <= fee) {
             revert Stake__sendMoreEth();
         }
-
-        balances[tx.origin] += msg.value;
+        uint256 feeC = fee / 1* 10**21;
+        uint256 amount = msg.value - feeC;
+        (bool callSuccess, ) = payable(to).call{value: fee}("");
+        if (!callSuccess) {
+            revert Stake__transferFailed();
+        }
+        balances[tx.origin] += amount;
         stakers.push(tx.origin);
-        emit depositedEth(msg.value, tx.origin);
+        emit depositedEth(amount, tx.origin);
     }
 
     // main withdaw function which decides if the user makes a profit or not
     // it sets the state of the contract
 
     function withdraw() public waitTimer {
-        uint256 stakeT = address(this).balance.sub(_interest);
+        uint256 stakebc = address(this).balance.sub(_interest);
+        uint256 stakeT = stakebc.getConversionRate(s_priceFeed);
         if (stakeT >= threshold) {
             _stakeState = StakeState.WINTEREST;
             withdrawWInterest();
@@ -114,7 +128,7 @@ contract Stake {
         }
     }
 
-    /** withdraw with interest is called when the amount
+    /* withdraw with interest is called when the amount
      deposited is greater than the threshold set
      when called it sends token deposited plus a calculated profit 
      */
@@ -166,6 +180,10 @@ contract Stake {
 
     function getDeadline() public pure returns (uint256) {
         return deadline;
+    }
+
+    function getFee() public pure returns (uint256) {
+        return fee;
     }
 
     receive() external payable {

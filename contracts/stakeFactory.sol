@@ -7,17 +7,27 @@ import "hardhat/console.sol";
 
 error Stake__NoStaker();
 error Stake__NotOwner();
+error Stake__NotOpen();
 
 contract StakeFactory {
     Stake[] public stakeAddresses;
-    uint256 private profit = 0.22 ether;
+    uint256 private profit;
     uint256 private immutable i_interval;
     address public /* immutable */ i_owner;
     uint256 private s_lastTimeStamp;
+    address private to;
+    address immutable i_priceFeed; 
 
     event createdStake(address indexed stakeContract);
 
-    constructor(uint256 _interval) payable {
+      modifier onlyOwner {
+        // require(msg.sender == owner);
+        if (msg.sender != i_owner) revert Stake__NotOwner();
+        _;
+    }
+
+
+    constructor(uint256 _interval, uint256 _profit, address _to, address _priceFeed) payable {
         (bool callSuccess, ) = address(this).call{value: msg.value}("");
         if (!callSuccess) {
             revert Stake__transferFailed();
@@ -25,24 +35,20 @@ contract StakeFactory {
          i_owner = msg.sender;
          i_interval = _interval;
          s_lastTimeStamp = block.timestamp;
+         profit = _profit;
+         to = _to;
+         i_priceFeed = _priceFeed;
     }
 
-     modifier onlyOwner {
-        // require(msg.sender == owner);
-        if (msg.sender != i_owner) revert Stake__NotOwner();
-        _;
-    }
+   
+    
 
-      modifier waitTimer {
-      if ((block.timestamp - s_lastTimeStamp) < i_interval) {
-            revert Stake__deadlineNotReached();
+    function createStake() public payable {
+        if((block.timestamp - s_lastTimeStamp) < i_interval) {
+            revert Stake__NotOpen();
         }
-        _;
-    }
-
-    function createStake() public payable waitTimer {
-  
-        Stake stakeContract = new Stake{value: profit}();
+        s_lastTimeStamp = block.timestamp;
+        Stake stakeContract = new Stake{value: profit}( to, i_priceFeed );
         stakeAddresses.push(stakeContract);
         emit createdStake(address(stakeContract));
     }

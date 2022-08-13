@@ -14,6 +14,9 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               await deployments.fixture(["all"])
               stakeFactory = await ethers.getContract("StakeFactory")
               //await stakeFactory.connect(deployer)
+              const intervalT = await stakeFactory.getInterval()
+              await network.provider.send("evm_increaseTime", [intervalT.toNumber() + 1])
+              await network.provider.request({ method: "evm_mine", params: [] })
               await stakeFactory.createStake()
               interval = await stakeFactory.getInterval()
               deadline = await stakeFactory.getDeadlinefromContract()
@@ -43,7 +46,6 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               it("checks the no. of stakers", async () => {
                   const stakers = await stakeFactory.getNoofStakers()
                   assert.equal(stakers.toString(), "1")
-                
               })
           })
           describe("withdraw function", () => {

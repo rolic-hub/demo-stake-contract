@@ -17,7 +17,16 @@ const MAINNET_RPC_URL = process.env.MAINNET_ALCHEMY_API_URL
 /** @type import('hardhat/config').HardhatUserConfig */
 
 module.exports = {
-    solidity: "0.8.9",
+    solidity: {
+        compilers:[
+            {
+                version:"0.8.9"
+            },
+            {
+                version:"0.6.0"
+            }
+        ],
+    },
     namedAccounts: {
         deployer: {
             default: 0, // here this will by default take the first account as deployer
