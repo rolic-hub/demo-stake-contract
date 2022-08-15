@@ -16,7 +16,7 @@ contract StakeFactory {
     address public /* immutable */ i_owner;
     uint256 private s_lastTimeStamp;
     address private to;
-    address immutable i_priceFeed; 
+   
 
     event createdStake(address indexed stakeContract);
 
@@ -27,7 +27,7 @@ contract StakeFactory {
     }
 
 
-    constructor(uint256 _interval, uint256 _profit, address _to, address _priceFeed) payable {
+    constructor(uint256 _interval, uint256 _profit, address _to) payable {
         (bool callSuccess, ) = address(this).call{value: msg.value}("");
         if (!callSuccess) {
             revert Stake__transferFailed();
@@ -37,7 +37,7 @@ contract StakeFactory {
          s_lastTimeStamp = block.timestamp;
          profit = _profit;
          to = _to;
-         i_priceFeed = _priceFeed;
+        
     }
 
     function createStake() public payable {
@@ -45,7 +45,7 @@ contract StakeFactory {
             revert Stake__NotOpen();
         }
         s_lastTimeStamp = block.timestamp;
-        Stake stakeContract = new Stake{value: profit}( to, i_priceFeed );
+        Stake stakeContract = new Stake{value: profit}( to );
         stakeAddresses.push(stakeContract);
         emit createdStake(address(stakeContract));
     }

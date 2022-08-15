@@ -13,6 +13,7 @@ const RINKEBY_RPC_URL = process.env.RINKEBY_ALCHEMY_API_URL
 const POLYGON_RPC_URL = process.env.POLYGON_ALCHEMY_API_URL
 const PRIVATE_KEY = process.env.PRIVATE_KEY
 const MAINNET_RPC_URL = process.env.MAINNET_ALCHEMY_API_URL
+const GOERLI_ALCHEMY_API_URL = process.env.GOERLI_ALCHEMY_API_URL
 
 /** @type import('hardhat/config').HardhatUserConfig */
 
@@ -39,12 +40,8 @@ module.exports = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
-            forking: {
-                url: MAINNET_RPC_URL,
-                blockNumber: 15284172,
-            },
             chainId: 31337,
-            // saveDeployments: true,
+             saveDeployments: true,
         },
         localhost: {
             chainId: 31337,
@@ -55,15 +52,20 @@ module.exports = {
             accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
             saveDeployments: true,
             chainId: 4,
-            saveDeployments: true,
+            
         },
         polygon: {
             url: POLYGON_RPC_URL,
             accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
             saveDeployments: true,
             chainId: 80001,
-            saveDeployments: true,
         },
+        goerli : {
+            url: GOERLI_ALCHEMY_API_URL,
+            accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+            saveDeployments: true,
+            chainId: 5,
+        }
     },
     etherscan: {
         // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>

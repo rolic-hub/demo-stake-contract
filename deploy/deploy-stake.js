@@ -10,14 +10,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const interval = networkConfig[chainId]["interval"]
     const profit = ethers.utils.parseEther(networkConfig[chainId]["interestAmount"])
     
-    let PriceFeedAddress
-    if (chainId == 31337) {
-        const ethUsdAggregator = await deployments.get("MockV3Aggregator")
-        PriceFeedAddress = ethUsdAggregator.address
-    } else {
-        PriceFeedAddress = networkConfig[chainId]["PriceFeed"]
-    }
-    let arguments = [interval, profit, deployer, PriceFeedAddress]
+    
+   
+    let arguments = [interval, profit, deployer]
     log("----------------------------------------------------------------------------")
 
     const stakefactory = await deploy("StakeFactory", {

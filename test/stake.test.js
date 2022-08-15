@@ -50,7 +50,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
                   assert.equal(amount.toString(), total.toString())
               })
               it("should check if the mapping was updated", async () => {
-                  const mapBalance = await stakeContract.balances(deployer.address)
+                  const mapBalance = await stakeContract.getStakersBalance(deployer.address)
                   const fee = await stakeContract.getFee()
                   const amount = parseInt(mapBalance) + parseInt(fee)
                   assert.equal(amount.toString(), depamount.toString())
@@ -77,6 +77,10 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               it("should check if threshold was set", async () => {
                   const _threshold = ethers.utils.parseEther(networkConfig[chainId]["threshold"])
                   assert.equal(thresholdc.toString(), _threshold.toString())
+              })
+              it("total stake should be zero", async () => {
+                const totalstake = await stakeContract.getAmountStaked()
+                assert.equal(totalstake.toString(), "0")
               })
           })
           describe("withdraw function", () => {
@@ -120,7 +124,7 @@ const { developmentChains, networkConfig } = require("../helper-hardhat-config")
               })
               it("should check if the mapping was updated", async () => {
                   await stakeContract.deposit({ value: depamount })
-                  const mapBalance = await stakeContract.balances(tester.address)
+                  const mapBalance = await stakeContract.getStakersBalance(tester.address)
                   const fee = await stakeContract.getFee()
                   const amount = parseInt(mapBalance) + parseInt(fee)
                   assert.equal(amount.toString(), depamount.toString())
